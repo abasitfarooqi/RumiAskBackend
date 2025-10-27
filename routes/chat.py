@@ -406,6 +406,7 @@ async def ask_rumi(request: ChatRequest):
         tokens_used = getattr(response, 'tokens_used', 0) or 0
         prompt_length = len(enhanced_prompt)
         inference_time = response.inference_time if hasattr(response, 'inference_time') else 0
+        history_length = len(conversation_history) if conversation_history else 0
         
         # Estimate tokens from response if not provided
         if tokens_used == 0:
@@ -424,7 +425,7 @@ Model: {request.model}
 Quotes used: {quotes_used}
 Inference time: {inference_time:.2f}s
 Tokens generated: {tokens_used}
-Prompt length: {prompt_length} chars
+Prompt length: {prompt_length} chars (includes {history_length} previous messages)
 Max tokens: {max_tokens}
 Temperature: {temperature}
 Estimated GPU usage: {estimated_gpu_mb} MB

@@ -8,7 +8,7 @@ class RumiApp {
             ? 'http://127.0.0.1:8001' 
             : window.location.origin;
         
-        this.selectedModel = 'gemma3:270m';
+        this.selectedModel = 'qwen3:0.6b';
         this.currentConversationId = null;
         this.isRecording = false;
         this.recognition = null;
@@ -17,9 +17,9 @@ class RumiApp {
             tts: true,
             voiceInput: true,
             darkMode: false,
-            defaultModel: 'gemma3:270m',
+            defaultModel: 'qwen3:0.6b',
             autoSpeak: true,
-            typingSpeed: 50,
+            typingSpeed: 30,
             soundEffects: true,
             // LLM Behavior Settings
             historyDepth: 2,
@@ -34,10 +34,22 @@ class RumiApp {
     }
 
     async init() {
+        console.log('🚀 RumiApp init started');
         this.setupSpeechRecognition();
         this.setupEventListeners();
         this.loadSettings();
+        
+        // Wait for DOM to be fully ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         await this.loadInitialData();
+        
+        // Force reload chat models after everything is ready
+        console.log('✅ Force reloading chat models after init...');
+        if (this.availableModels && this.availableModels.length > 0) {
+            this.loadChatModelSelector(this.availableModels);
+        }
+        
         this.setupKeyboardShortcuts();
         this.setupServiceWorker();
     }
@@ -102,15 +114,8 @@ class RumiApp {
             });
         });
 
-        // Model selection
-        document.querySelectorAll('.model-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.selectedModel = btn.dataset.model;
-                document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.showToast(`Switched to ${btn.textContent}`, 'success');
-            });
-        });
+        // Model selection - handled dynamically in loadChatModelSelector
+        // No need to add listeners here as buttons don't exist yet
 
         // Chat functionality
         const chatInput = document.getElementById('chatInput');
@@ -235,7 +240,9 @@ class RumiApp {
         ]);
     }
 
-    switchPage(pageName) {
+    async switchPage(pageName) {
+        console.log(`🔄 Switching to page: ${pageName}`);
+        
         // Update navigation
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.classList.remove('active');
@@ -250,6 +257,13 @@ class RumiApp {
 
         // Load page-specific data
         switch(pageName) {
+            case 'chat':
+                // Ensure models are loaded for chat page
+                if (!this.availableModels || this.availableModels.length === 0) {
+                    console.log('🔄 Chat page: models not loaded, loading now...');
+                    await this.loadModels();
+                }
+                break;
             case 'models':
                 this.loadModels();
                 break;
@@ -281,6 +295,8 @@ class RumiApp {
 
         // Show typing indicator
         const typingId = this.addTypingIndicator();
+
+        console.log(`💬 Sending message with model: ${this.selectedModel}`);
 
         try {
             const response = await fetch(`${this.API_BASE}/api/chat/ask-rumi`, {
@@ -519,13 +535,27 @@ class RumiApp {
 
     async loadModels() {
         try {
+            console.log('📦 Loading models from API...');
             const response = await fetch(`${this.API_BASE}/api/models/`);
             const data = await response.json();
+            console.log(`📦 Received ${data.models.length} models from API`);
+
+            // Store models for later use
+            this.availableModels = data.models;
+
+            // Load models for chat header selector - with retry
+            if (!this.loadChatModelSelector(data.models)) {
+                console.log('⏳ Retrying chatModelSelector in 100ms...');
+                setTimeout(() => {
+                    this.loadChatModelSelector(this.availableModels);
+                }, 100);
+            }
 
             const modelsGrid = document.getElementById('modelsGrid');
-            modelsGrid.innerHTML = '';
+            if (modelsGrid) {
+                modelsGrid.innerHTML = '';
 
-            data.models.forEach(model => {
+                data.models.forEach(model => {
                 const modelCard = document.createElement('div');
                 modelCard.className = `model-card ${model.status === 'available' ? 'active' : ''}`;
                 if (model.name === this.selectedModel) {
@@ -560,15 +590,62 @@ class RumiApp {
                 `;
 
                 modelsGrid.appendChild(modelCard);
-            });
+                });
+            }
         } catch (error) {
             console.error('Error loading models:', error);
             this.showToast('Error loading models', 'error');
         }
     }
 
+    loadChatModelSelector(models) {
+        console.log('🔍 Looking for chatModelSelector element...');
+        const selector = document.getElementById('chatModelSelector');
+        console.log('🔍 Selector element:', selector);
+        
+        if (!selector) {
+            console.error('❌ chatModelSelector element not found!');
+            console.error('Available elements:', document.querySelectorAll('.model-selector'));
+            return false;
+        }
+
+        console.log('✅ chatModelSelector found, populating models...');
+        selector.innerHTML = '';
+        
+        // Filter to only available chat models (exclude whisper, etc.)
+        const availableModels = models.filter(model => 
+            model.status === 'available' && 
+            !model.name.toLowerCase().includes('whisper') &&
+            model.capabilities && 
+            model.capabilities.includes('chat')
+        );
+        
+        console.log(`Available chat models:`, availableModels.map(m => m.name));
+        
+        availableModels.forEach(model => {
+            const btn = document.createElement('button');
+            btn.className = 'model-btn';
+            btn.dataset.model = model.name;
+            btn.textContent = model.display_name || model.name;
+            
+            if (model.name === this.selectedModel) {
+                btn.classList.add('active');
+            }
+            
+            btn.addEventListener('click', () => {
+                this.selectModel(model.name);
+            });
+            
+            selector.appendChild(btn);
+        });
+        
+        console.log(`✅ Loaded ${availableModels.length} chat models`);
+        return true;
+    }
+
     selectModel(modelName) {
         this.selectedModel = modelName;
+        console.log(`🔄 Selected model changed to: ${modelName}`);
         document.querySelectorAll('.model-btn').forEach(btn => {
             btn.classList.remove('active');
             if (btn.dataset.model === modelName) {
@@ -576,7 +653,7 @@ class RumiApp {
             }
         });
         this.showToast(`Switched to ${modelName}`, 'success');
-        this.switchPage('chat');
+        // Don't switch page, stay on chat
     }
 
     async downloadModel(modelName) {
