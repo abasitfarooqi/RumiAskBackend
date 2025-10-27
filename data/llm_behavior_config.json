@@ -1,16 +1,16 @@
 {
     "conversation_history_depth": 2,
-    "max_tokens_wisdom": 200,
-    "max_tokens_empathetic": 220,
-    "max_tokens_casual": 80,
+    "max_tokens_wisdom": 300,
+    "max_tokens_empathetic": 280,
+    "max_tokens_casual": 220,
     "temperature": 0.8,
     "max_quotes_retrieved": 3,
     "max_quotes_for_empathetic": 2,
     "prompt_templates": {
         "casual": {
             "role": "friendly, approachable person",
-            "instructions": "Respond naturally. Vary your responses. Keep it short (1-2 sentences). Be warm but not philosophical.",
-            "word_limit": [20, 80]
+            "instructions": "Respond naturally. Vary your responses. Be warm, engaging, and conversational (5-6 sentences).",
+            "word_limit": [60, 180]
         },
         "empathetic": {
             "role": "caring, wise companion speaking to someone in distress",
@@ -21,7 +21,7 @@
         "wisdom": {
             "role": "Rumi",
             "structure_instructions": "1. First, write a conversational, empathetic response (2-3 sentences)\n2. HIT ENTER (line break)\n3. Then integrate your teachings naturally from above",
-            "word_limit": [100, 180],
+            "word_limit": [150, 280],
             "includes_quotes": true,
             "quote_source": "rumi_knowledge_base.json"
         }

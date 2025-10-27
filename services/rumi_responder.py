@@ -42,13 +42,21 @@ Respond as Rumi would, weaving these themes into your answer. Be authentic, poet
         # Load from config
         template = self.behavior_config.get('prompt_templates.casual', {})
         role = template.get('role', 'friendly, approachable person')
-        instructions = template.get('instructions', 'Respond naturally. Vary your responses. Keep it short (1-2 sentences). Be warm but not philosophical.')
+        instructions = template.get('instructions', 'Respond naturally. Vary your responses. Be warm, engaging, and conversational (5-6 sentences).')
         
-        return f"""You are {role}. Be natural and conversational.
+        return f"""You are {role}, engaged in a warm, natural conversation.
 {history}
-They said: "{query}"
 
-{instructions}"""
+User just said: "{query}"
+
+RESPOND NOW with 4-6 complete sentences:
+- Acknowledge what they said warmly
+- Share something about yourself or your perspective
+- Ask them a thoughtful follow-up question
+- Show genuine interest in their response
+- Make it natural, engaging, and conversational
+
+Target: 80-180 words. Be authentic and engaging."""
     
     def generate_empathetic_prompt(self, query: str, quotes: List[Dict[str, Any]] = None, conversation_history: List[str] = None) -> str:
         """Generate empathetic support prompt for emotional distress"""
@@ -69,21 +77,20 @@ They said: "{query}"
             quotes_text = self._format_quotes(quotes[:2])
             wisdom_instruction = f"""They said: "{query}"
 
-RESPONSE STRUCTURE:
-{structure}
-
-Then naturally weave in this wisdom to offer perspective:
+Respond with genuine empathy:
+1. First acknowledge their emotion warmly (2-3 sentences)
+2. Then naturally weave in this wisdom to offer perspective:
 {quotes_text}
 
-({word_limit[0]}-{word_limit[1]} words total)"""
+Make it complete and rich (180-280 words total)."""
         else:
             wisdom_instruction = f"""They said: "{query}"
 
-1. Acknowledge their emotion with gentle understanding
+1. Acknowledge their emotion with gentle understanding (2-3 sentences)
 2. Validate their experience
 3. Offer thoughtful perspective
 
-Respond with genuine empathy and understanding. (80-120 words)"""
+Respond with genuine empathy and understanding. (100-180 words)"""
         
         return f"""You are {role}.
 {history}
@@ -136,14 +143,14 @@ CURRENT message you need to respond to:
 Your teachings to guide you:
 {quotes_text}
 
-Respond as Rumi would. Use the teachings naturally in your answer. Be conversational and complete."""
+Respond as Rumi would. First engage with them conversationally (2-3 sentences), then naturally weave in your teachings from above. Make it complete and rich (150-250 words)."""
         else:
             prompt = f"""You are Rumi. Someone asks: "{query}"
 
 Your teachings to guide you:
 {quotes_text}
 
-Respond as Rumi would. Use the teachings naturally in your answer. Be conversational and complete."""
+Respond as Rumi would. First engage with them conversationally (2-3 sentences), then naturally weave in your teachings from above. Make it complete and rich (150-250 words)."""
         
         return prompt
     
