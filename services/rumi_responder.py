@@ -5,6 +5,7 @@ Generate Rumi-style responses using retrieved quotes
 from typing import List, Dict, Any
 from services.query_analyzer import QueryIntent
 from services.rumi_config import get_config, RumiConfig
+from services.behavior_config import get_behavior_config
 
 class RumiResponder:
     """Generate Rumi-style responses"""
@@ -12,6 +13,7 @@ class RumiResponder:
     def __init__(self, config: RumiConfig = None):
         """Initialize responder with configuration"""
         self.config = config if config else get_config()
+        self.behavior_config = get_behavior_config()
     
     RUMI_SYSTEM_PROMPT = """You are Jalaluddin Rumi, the 13th-century Persian mystic and poet.
 
@@ -31,7 +33,64 @@ User's Current State:
 
 Respond as Rumi would, weaving these themes into your answer. Be authentic, poetic, and transformative."""
     
-    def generate_prompt(self, query: str, quotes: List[Dict[str, Any]], intent: QueryIntent, conversation_history: List[str] = None, config: RumiConfig = None) -> str:
+    def generate_casual_prompt(self, query: str, conversation_history: List[str] = None) -> str:
+        """Generate prompt for casual chat (no quotes, just friendly)"""
+        history = ""
+        if conversation_history:
+            history = "\nPrevious messages:\n" + "\n".join(conversation_history[-2:])
+        
+        # Load from config
+        template = self.behavior_config.get('prompt_templates.casual', {})
+        role = template.get('role', 'friendly, approachable person')
+        instructions = template.get('instructions', 'Respond naturally. Vary your responses. Keep it short (1-2 sentences). Be warm but not philosophical.')
+        
+        return f"""You are {role}. Be natural and conversational.
+{history}
+They said: "{query}"
+
+{instructions}"""
+    
+    def generate_empathetic_prompt(self, query: str, quotes: List[Dict[str, Any]] = None, conversation_history: List[str] = None) -> str:
+        """Generate empathetic support prompt for emotional distress"""
+        history = ""
+        if conversation_history:
+            # Only get last message to avoid confusion
+            if len(conversation_history) >= 1:
+                history = f"\nPrevious context: {conversation_history[-1]}\n"
+        
+        # Load from config
+        template = self.behavior_config.get('prompt_templates.empathetic', {})
+        role = template.get('role', 'caring, wise companion speaking to someone in distress')
+        structure = template.get('structure_instructions', '')
+        word_limit = template.get('word_limit', [140, 200])
+        
+        # Format wisdom for natural integration
+        if quotes:
+            quotes_text = self._format_quotes(quotes[:2])
+            wisdom_instruction = f"""They said: "{query}"
+
+RESPONSE STRUCTURE:
+{structure}
+
+Then naturally weave in this wisdom to offer perspective:
+{quotes_text}
+
+({word_limit[0]}-{word_limit[1]} words total)"""
+        else:
+            wisdom_instruction = f"""They said: "{query}"
+
+1. Acknowledge their emotion with gentle understanding
+2. Validate their experience
+3. Offer thoughtful perspective
+
+Respond with genuine empathy and understanding. (80-120 words)"""
+        
+        return f"""You are {role}.
+{history}
+CURRENT message you need to respond to:
+{wisdom_instruction}"""
+    
+    def generate_wisdom_prompt(self, query: str, quotes: List[Dict[str, Any]], intent: QueryIntent, conversation_history: List[str] = None) -> str:
         """
         Generate conversational prompt for LLM
         
@@ -50,70 +109,69 @@ Respond as Rumi would, weaving these themes into your answer. Be authentic, poet
         # Get emotion context
         emotion_context = self._format_emotion_context(intent)
         
-        # Build conversation context
+        # Build conversation context - LIMIT to avoid confusion
         history_text = ""
         if conversation_history and len(conversation_history) > 0:
-            history_text = "\nRecent conversation:\n" + "\n".join(conversation_history[-2:])
+            # Only get LAST exchange to avoid confusing context
+            recent = conversation_history[-1:] if len(conversation_history) >= 1 else []
+            if recent:
+                history_text = f"Context from previous message:\n{recent[0]}"
         
-        # Create the prompt as a conversational system
-        # Different prompts for simple vs deep queries
-        if intent.is_simple:
-            # SIMPLE QUERY: Just conversational, no deep philosophy
-            history_part = ""
-            if history_text:
-                history_part = history_text + "\n"
-            
-            prompt = f"""You are Rumi, having a conversation.
+        # Load from config
+        template = self.behavior_config.get('prompt_templates.wisdom', {})
+        role = template.get('role', 'Rumi')
+        structure = template.get('structure_instructions', '')
+        word_limit = template.get('word_limit', [100, 180])
+        quote_source = template.get('quote_source', 'rumi_knowledge_base.json')
+        
+        # Get guidelines
+        guidelines = self.behavior_config.get('response_guidelines', {})
+        emphasize = guidelines.get('emphasize_current_question', True)
+        ignore_old = guidelines.get('ignore_old_questions', True)
+        
+        # Prompt that ALWAYS uses quotes from knowledge base - NATURAL RUMI
+        if history_text:
+            prompt = f"""You are Rumi. Someone asks: "{query}"
 
-{history_part}They say: "{query}"
-
-Respond naturally and warmly. For simple greetings or introductions:
-- If they say their name → Acknowledge warmly, like "Welcome, dear Clara" or "Ah, beautiful name, Clara"
-- If they greet you → Greet back warmly, ask how you can help
-- Keep it SHORT (20-50 words)
-- Be human, warm, personal - NO deep philosophy for simple things
-- Just continue the conversation naturally"""
-        elif history_text:
-            # DEEP QUERY WITH HISTORY: Use wisdom and context
-            prompt = f"""You are Rumi in deep conversation with this seeker.
-
-YOUR CONVERSATION SO FAR:
-{history_text}
-
-NOW THEY ASK: "{query}"
-
-YOUR WISDOM TO WEAVE IN:
+Your teachings to guide you:
 {quotes_text}
 
-Respond as Rumi would:
-- Use wisdom from teachings naturally
-- Reference what they've shared
-- Be profound but accessible (80-150 words)
-- Speak to their specific question
-- Use their name when relevant"""
+Respond as Rumi would. Use the teachings naturally in your answer. Be conversational and complete."""
         else:
-            # DEEP QUERY: No history yet
-            prompt = f"""You are Rumi speaking to a seeker.
+            prompt = f"""You are Rumi. Someone asks: "{query}"
 
-They ask: "{query}"
-
-YOUR WISDOM:
+Your teachings to guide you:
 {quotes_text}
 
-Respond deeply and profoundly as Rumi (80-150 words)."""
+Respond as Rumi would. Use the teachings naturally in your answer. Be conversational and complete."""
         
         return prompt
     
     def _format_quotes(self, quotes: List[Dict[str, Any]]) -> str:
-        """Format quotes for prompt"""
+        """Format quotes for prompt - uses config for formatting"""
         if not quotes:
-            return "None available."
+            return "No specific wisdom for this, but respond as Rumi would."
+        
+        # Load formatting config
+        formatting = self.behavior_config.get('quote_formatting', {})
+        header = formatting.get('header', 'YOUR TEACHINGS (use these directly):')
+        max_display = formatting.get('max_display', 3)
+        show_ids = formatting.get('show_ids', True)
+        show_sources = formatting.get('show_sources', True)
         
         formatted = []
-        for i, quote in enumerate(quotes[:3], 1):  # Top 3 quotes
+        formatted.append(header)
+        for i, quote in enumerate(quotes[:max_display], 1):
             quote_text = quote.get('quote', '')
-            theme = quote.get('primary_theme', '')
-            formatted.append(f"{i}. {quote_text}")
+            quote_id = quote.get('id', '')
+            source = quote.get('source_ref', '')
+            
+            if show_ids and show_sources:
+                formatted.append(f"{i}. [{quote_id}] {quote_text}\n   Source: {source}")
+            elif show_ids:
+                formatted.append(f"{i}. [{quote_id}] {quote_text}")
+            else:
+                formatted.append(f"{i}. {quote_text}")
         
         return "\n".join(formatted)
     
@@ -137,16 +195,18 @@ Respond deeply and profoundly as Rumi (80-150 words)."""
     
     def post_process_response(self, response: str) -> str:
         """Post-process LLM response for quality and conversational flow"""
+        # Load post-processing config
+        post_config = self.behavior_config.get('post_processing', {})
+        markers = post_config.get('markers_to_remove', [])
+        skip_patterns = post_config.get('skip_patterns', [])
+        max_words = post_config.get('max_word_limit', 150)
+        min_words = post_config.get('min_word_limit', 30)
+        trim_to_sentence = post_config.get('trim_to_sentence', True)
+        
         # Clean up common issues
         response = response.strip()
         
         # Remove any system prompt remnants
-        markers = [
-            "Your response:", "Begin your response:", "Response:",
-            "You are Rumi", "The seeker asks", "Response:", "Your wisdom",
-            "[Your wisdom]", "Your wisdom to draw upon"
-        ]
-        
         for marker in markers:
             if marker in response:
                 parts = response.split(marker)
@@ -158,10 +218,6 @@ Respond deeply and profoundly as Rumi (80-150 words)."""
         lines = response.split('\n')
         cleaned_lines = []
         for line in lines:
-            skip_patterns = [
-                'you are', 'rules:', 'seeker\'s', 'teaching:', 'answer as',
-                '[your wisdom]', '[conversation context]', 'conversation so far:'
-            ]
             if not any(skip in line.lower() for skip in skip_patterns):
                 if line.strip() and line.strip() not in ['', '...']:
                     cleaned_lines.append(line.strip())
@@ -169,22 +225,23 @@ Respond deeply and profoundly as Rumi (80-150 words)."""
         response = '\n'.join(cleaned_lines).strip()
         
         # If response is still empty or just artifacts, give fallback
-        if not response or response == '' or len(response) < 30:
-            # Let it pass through even if short - might be a valid short answer
+        if not response or response == '' or len(response) < min_words:
             pass
         
-        # Count words and trim if too long, but preserve conversational flow
+        # Count words and trim if too long
         words = response.split()
-        # Allow longer responses (up to 180 words for conversational flow)
-        if len(words) > 180:
-            # Find a good stopping point at sentence end
-            for i in range(150, min(180, len(words))):
-                if i < len(words) and words[i][-1] in '.!?':
-                    response = ' '.join(words[:i+1])
-                    break
+        if len(words) > max_words:
+            if trim_to_sentence:
+                # Find a good stopping point at sentence end
+                for i in range(max_words - 30, min(max_words, len(words))):
+                    if i < len(words) and words[i][-1] in '.!?':
+                        response = ' '.join(words[:i+1])
+                        break
+                else:
+                    # No sentence end found, cut at max_words
+                    response = ' '.join(words[:max_words])
             else:
-                # No sentence end found, cut at 150 words
-                response = ' '.join(words[:150])
+                response = ' '.join(words[:max_words])
         
         # Remove excessive whitespace but keep single line breaks for paragraph structure
         response = ' '.join(response.split())

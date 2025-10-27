@@ -20,6 +20,8 @@ from core.model_manager import get_model_registry
 from services.query_analyzer import get_query_analyzer
 from services.quote_retriever import get_quote_retriever
 from services.rumi_responder import get_rumi_responder
+from services.conversation_layer import ConversationLayer
+from services.behavior_config import get_behavior_config
 
 logger = logging.getLogger(__name__)
 
@@ -284,6 +286,7 @@ async def ask_rumi(request: ChatRequest):
         analyzer = get_query_analyzer()
         retriever = get_quote_retriever()
         responder = get_rumi_responder()
+        layer = ConversationLayer()
         
         # Get conversation ID first
         conversation_id = request.conversation_id or f"conv_{len(conversations) + 1}"
@@ -313,49 +316,78 @@ async def ask_rumi(request: ChatRequest):
         intent = analyzer.analyze(request.message)
         logger.info(f"Detected intent: {intent.intent_type}, emotions: {intent.emotions}, themes: {intent.themes}")
         
-        # Retrieve relevant quotes
-        quotes = retriever.retrieve(intent, max_quotes=3)
-        logger.info(f"Retrieved {len(quotes)} quotes")
+        # DECIDE: Empathetic support OR Casual chat OR Rumi wisdom
+        needs_empathy = layer.needs_empathetic_support(request.message)
+        use_rumi_wisdom = layer.should_use_rumi_wisdom(request.message)
         
-        # Get conversation history for context
+        logger.info(f"{'❤️ EMPATHETIC SUPPORT' if needs_empathy else '🔮 RUMI WISDOM' if use_rumi_wisdom else '💬 Casual CHAT (simple response)'}")
+        
+        # Load behavior config
+        behavior_config = get_behavior_config()
+        history_depth = behavior_config.get('conversation_history_depth', 2)
+        
+        # Get conversation history - LIMIT to avoid confusion
         conversation_history = []
-        if len(conversation.messages) > 1:  # More than just the current message
-            # Get last few exchanges for conversational context
-            context_messages = conversation.messages[-5:-1]  # Last few, excluding current
+        if len(conversation.messages) > 1:
+            # Get last N messages based on config
+            context_messages = conversation.messages[-(history_depth+1):-1]
             conversation_history = [
                 f"{msg.role}: {msg.content}" for msg in context_messages
             ]
+            logger.info(f"📝 Conversation history: {len(conversation_history)} previous messages")
         
-        # Generate conversational prompt with history
-        logger.info(f"Conversation history length: {len(conversation_history)}")
-        logger.info(f"History: {conversation_history}")
-        
-        enhanced_prompt = responder.generate_prompt(
-            request.message, 
-            quotes, 
-            intent,
-            conversation_history=conversation_history
-        )
+        # Generate appropriate prompt
+        if needs_empathy:
+            # Empathetic support with optional wisdom
+            max_quotes_empathy = behavior_config.get('max_quotes_for_empathetic', 2)
+            quotes = retriever.retrieve(intent, max_quotes=max_quotes_empathy)
+            logger.info(f"❤️ Empathetic response with {len(quotes)} supportive quotes")
+            enhanced_prompt = responder.generate_empathetic_prompt(
+                request.message,
+                quotes if quotes else None,
+                conversation_history=conversation_history
+            )
+        elif use_rumi_wisdom:
+            # Use knowledge base quotes
+            max_quotes = behavior_config.get('max_quotes_retrieved', 3)
+            quotes = retriever.retrieve(intent, max_quotes=max_quotes)
+            logger.info(f"✅ Using {len(quotes)} quotes from rumi_knowledge_base.json")
+            enhanced_prompt = responder.generate_wisdom_prompt(
+                request.message, 
+                quotes, 
+                intent,
+                conversation_history=conversation_history
+            )
+        else:
+            # Casual chat, no quotes
+            logger.info("💬 Casual response - no quotes")
+            quotes = []  # No quotes for casual
+            enhanced_prompt = responder.generate_casual_prompt(
+                request.message,
+                conversation_history=conversation_history
+            )
         
         logger.info(f"Generated prompt length: {len(enhanced_prompt)}")
         logger.info(f"Prompt preview: {enhanced_prompt[:500]}")
         
-        # Adjust max_tokens based on query depth
-        # Simple queries (greetings) → shorter responses
-        # Deep queries (philosophical) → longer responses
-        if intent.is_simple:
-            max_tokens = request.max_tokens or 100  # Short for greetings
+        # Load config and adjust tokens based on layer type
+        behavior_config = get_behavior_config()
+        if needs_empathy:
+            max_tokens = behavior_config.get('max_tokens_empathetic', 220)
+        elif use_rumi_wisdom:
+            max_tokens = behavior_config.get('max_tokens_wisdom', 200)
         else:
-            max_tokens = request.max_tokens or 250  # Long for deep questions
+            max_tokens = behavior_config.get('max_tokens_casual', 80)
+        
+        temperature = behavior_config.get('temperature', 0.8)
         
         # Create inference request with enhanced prompt
-        # No explicit context - conversation history is in the prompt
         inference_request = InferenceRequest(
             model=request.model,
             prompt=enhanced_prompt,
-            temperature=0.85,  # More conversational and natural
-            max_tokens=max_tokens,  # Adjusted based on query depth
-            context=None  # Context is now in the prompt itself
+            temperature=temperature,
+            max_tokens=request.max_tokens or max_tokens,
+            context=None
         )
         
         # Run inference
@@ -367,6 +399,34 @@ async def ask_rumi(request: ChatRequest):
         
         # Post-process response
         final_response = responder.post_process_response(response.response)
+        
+        # Collect technical specs
+        response_type = "❤️ Empathetic Support" if needs_empathy else "🔮 Rumi Wisdom" if use_rumi_wisdom else "💬 Casual Chat"
+        quotes_used = len(quotes) if quotes else 0
+        
+        # Add technical specs temporarily (user will remove later)
+        tech_specs = f"\n\n--- TECH SPECS ---\nMode: {response_type}\nQuotes used: {quotes_used}\nTime: {response.inference_time:.2f}s"
+        final_response += tech_specs
+        
+        # If using Rumi wisdom OR empathetic support with quotes, append sources
+        if (use_rumi_wisdom or needs_empathy) and quotes:
+            sources = []
+            for q in quotes:
+                quote_id = q.get('id', 'N/A')
+                source_ref = q.get('source_ref', '')
+                primary_theme = q.get('primary_theme', '')
+                
+                # Format: ID (Source)
+                if source_ref:
+                    sources.append(f"{quote_id} ({source_ref})")
+                elif primary_theme:
+                    sources.append(f"{quote_id} ({primary_theme})")
+                else:
+                    sources.append(quote_id)
+            
+            if sources:
+                # Append sources at the end
+                final_response += f"\n📜 Sources: {', '.join(sources)}"
         
         # Add assistant response (user message already stored above)
         conversation.messages.append(ChatMessage(
@@ -412,6 +472,68 @@ async def update_rumi_settings(settings: dict):
         "status": "updated",
         "settings": settings,
         "message": "Settings will apply to new conversations"
+    }
+
+@router.get("/behavior-settings")
+async def get_behavior_settings():
+    """Get LLM behavior configuration"""
+    try:
+        behavior_config = get_behavior_config()
+        return {
+            "status": "success",
+            "config": behavior_config.to_dict()
+        }
+    except Exception as e:
+        logger.error(f"Error getting behavior settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/behavior-settings")
+async def update_behavior_settings(settings: dict):
+    """Update LLM behavior configuration"""
+    try:
+        behavior_config = get_behavior_config()
+        
+        # Update configuration
+        if behavior_config.update(settings):
+            return {
+                "status": "success",
+                "message": "Behavior settings updated",
+                "config": behavior_config.to_dict()
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to save settings")
+    except Exception as e:
+        logger.error(f"Error updating behavior settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/ask-rumi/debug")
+async def ask_rumi_debug(request: ChatRequest):
+    """Debug endpoint to see which quotes are being used"""
+    analyzer = get_query_analyzer()
+    retriever = get_quote_retriever()
+    
+    # Analyze and retrieve
+    intent = analyzer.analyze(request.message)
+    quotes = retriever.retrieve(intent, max_quotes=3)
+    
+    return {
+        "query": request.message,
+        "intent": {
+            "type": intent.intent_type,
+            "emotions": intent.emotions,
+            "themes": intent.themes,
+            "is_simple": intent.is_simple
+        },
+        "quotes_from_knowledge_base": [
+            {
+                "id": q["id"],
+                "quote": q["quote"],
+                "theme": q.get("primary_theme", ""),
+                "tags": q.get("micro_tags", [])
+            }
+            for q in quotes
+        ],
+        "message": f"✅ Using {len(quotes)} quotes from rumi_knowledge_base.json"
     }
 
 @router.get("/health")

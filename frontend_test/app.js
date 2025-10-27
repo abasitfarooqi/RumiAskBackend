@@ -20,7 +20,14 @@ class RumiApp {
             defaultModel: 'gemma3:270m',
             autoSpeak: true,
             typingSpeed: 50,
-            soundEffects: true
+            soundEffects: true,
+            // LLM Behavior Settings
+            historyDepth: 2,
+            maxTokensWisdom: 180,
+            maxTokensEmpathy: 220,
+            maxTokensCasual: 80,
+            temperature: 0.8,
+            maxQuotes: 3
         };
         this.conversations = [];
         this.isTyping = false;
@@ -158,6 +165,20 @@ class RumiApp {
             this.selectedModel = e.target.value;
             this.saveSettings();
         });
+        
+        // LLM Behavior Settings
+        document.getElementById('saveBehaviorBtn').addEventListener('click', () => {
+            this.saveBehaviorSettings();
+        });
+        
+        // Prompt Templates
+        document.getElementById('savePromptTemplatesBtn').addEventListener('click', () => {
+            this.savePromptTemplates();
+        });
+        
+        document.getElementById('resetPromptTemplatesBtn').addEventListener('click', () => {
+            this.resetPromptTemplates();
+        });
     }
 
     setupKeyboardShortcuts() {
@@ -183,7 +204,7 @@ class RumiApp {
 
     setupServiceWorker() {
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/frontend/sw.js')
+            navigator.serviceWorker.register('/sw.js')
                 .then(registration => {
                     console.log('Service Worker registered:', registration);
                 })
@@ -224,6 +245,9 @@ class RumiApp {
                 break;
             case 'history':
                 this.loadConversations();
+                break;
+            case 'settings':
+                this.loadBehaviorSettings();
                 break;
         }
     }
@@ -631,18 +655,40 @@ class RumiApp {
             data.conversations.forEach(conv => {
                 const convItem = document.createElement('div');
                 convItem.className = 'conversation-item';
+                convItem.dataset.conversationId = conv.id;
+                
+                // Get first message as preview
+                let preview = 'New conversation';
+                if (conv.messages && conv.messages.length > 0) {
+                    const firstUserMsg = conv.messages.find(m => m.role === 'user');
+                    if (firstUserMsg) {
+                        preview = firstUserMsg.content.substring(0, 60) + (firstUserMsg.content.length > 60 ? '...' : '');
+                    }
+                }
+                
                 convItem.innerHTML = `
                     <div class="conversation-header">
-                        <div class="conversation-title">Conversation ${conv.id}</div>
-                        <div class="conversation-date">${new Date(conv.updated_at).toLocaleDateString()}</div>
+                        <div class="conversation-title">📝 ${conv.id}</div>
+                        <button class="btn-delete-conv" data-conv-id="${conv.id}" title="Delete">🗑️</button>
                     </div>
                     <div class="conversation-preview">
-                        ${conv.message_count} messages • Model: ${conv.model}
+                        ${preview}
+                    </div>
+                    <div class="conversation-meta">
+                        ${conv.message_count} messages • ${new Date(conv.updated_at).toLocaleDateString()}
                     </div>
                 `;
 
-                convItem.addEventListener('click', () => {
-                    this.showToast('Conversation loading not implemented yet', 'info');
+                convItem.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('btn-delete-conv')) return;
+                    this.loadConversation(conv.id);
+                });
+                
+                // Delete button
+                const deleteBtn = convItem.querySelector('.btn-delete-conv');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteConversation(conv.id);
                 });
 
                 conversationList.appendChild(convItem);
@@ -651,6 +697,96 @@ class RumiApp {
             console.error('Error loading conversations:', error);
         }
     }
+    
+    async loadConversation(convId) {
+        try {
+            const response = await fetch(`${this.API_BASE}/api/chat/conversations`);
+            const data = await response.json();
+            
+            const conversation = data.conversations.find(c => c.id === convId);
+            if (!conversation) {
+                this.showToast('Conversation not found', 'error');
+                return;
+            }
+            
+            // Set current conversation
+            this.currentConversationId = convId;
+            
+            // Clear current chat
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+            
+            // Load messages
+            conversation.messages.forEach(msg => {
+                const role = msg.role;
+                const content = msg.content;
+                
+                this.addMessageWithoutSpeaking(content, role, false);
+            });
+            
+            // Switch to chat page
+            this.switchPage('chat');
+            this.showToast(`Loaded conversation ${convId}`, 'success');
+            
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+            this.showToast('Error loading conversation', 'error');
+        }
+    }
+    
+    async deleteConversation(convId) {
+        try {
+            if (!confirm('Delete this conversation?')) return;
+            
+            const response = await fetch(`${this.API_BASE}/api/chat/conversations/${convId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                this.showToast('Conversation deleted', 'success');
+                this.loadConversations();
+                
+                // If deleted conversation was current, reset
+                if (this.currentConversationId === convId) {
+                    this.currentConversationId = null;
+                    this.clearChat();
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            this.showToast('Error deleting conversation', 'error');
+        }
+    }
+    
+    addMessageWithoutSpeaking(text, sender, isLoading = false) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        messageDiv.dataset.messageId = messageId;
+
+        const avatar = sender === 'user' ? '👤' : '🧠';
+        const actions = isLoading ? '' : `
+            <div class="message-actions">
+                <button class="action-btn" onclick="rumiApp.speakText(this)" title="Speak">🔊</button>
+                <button class="action-btn" onclick="rumiApp.copyText(this)" title="Copy">📋</button>
+            </div>
+        `;
+
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">
+                <div class="message-text">${text}</div>
+                ${actions}
+            </div>
+        `;
+
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        return messageId;
+    }
 
     loadSettings() {
         const savedSettings = localStorage.getItem('rumiSettings');
@@ -658,12 +794,162 @@ class RumiApp {
             this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
         }
 
-        // Apply settings
+        // Apply UI settings
         document.getElementById('ttsToggle').classList.toggle('active', this.settings.tts);
         document.getElementById('voiceToggle').classList.toggle('active', this.settings.voiceInput);
         document.getElementById('darkModeToggle').classList.toggle('active', this.settings.darkMode);
         document.getElementById('defaultModelSelect').value = this.settings.defaultModel;
         this.selectedModel = this.settings.defaultModel;
+        
+        // Apply LLM behavior settings
+        if (document.getElementById('historyDepth')) {
+            document.getElementById('historyDepth').value = this.settings.historyDepth;
+            document.getElementById('maxTokensWisdom').value = this.settings.maxTokensWisdom;
+            document.getElementById('maxTokensEmpathy').value = this.settings.maxTokensEmpathy;
+            document.getElementById('maxTokensCasual').value = this.settings.maxTokensCasual;
+            document.getElementById('temperature').value = this.settings.temperature;
+            document.getElementById('maxQuotes').value = this.settings.maxQuotes;
+        }
+    }
+    
+    async saveBehaviorSettings() {
+        try {
+            const settings = {
+                conversation_history_depth: parseInt(document.getElementById('historyDepth').value),
+                max_tokens_wisdom: parseInt(document.getElementById('maxTokensWisdom').value),
+                max_tokens_empathetic: parseInt(document.getElementById('maxTokensEmpathy').value),
+                max_tokens_casual: parseInt(document.getElementById('maxTokensCasual').value),
+                temperature: parseFloat(document.getElementById('temperature').value),
+                max_quotes_retrieved: parseInt(document.getElementById('maxQuotes').value)
+            };
+            
+            const response = await fetch(`${this.API_BASE}/api/chat/behavior-settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            
+            const data = await response.json();
+            this.showToast('LLM behavior settings saved to server!', 'success');
+        } catch (error) {
+            this.showToast('Error saving settings: ' + error.message, 'error');
+        }
+    }
+    
+    async loadBehaviorSettings() {
+        try {
+            const response = await fetch(`${this.API_BASE}/api/chat/behavior-settings`);
+            const data = await response.json();
+            
+            if (data.config) {
+                const config = data.config;
+                // Load basic settings
+                if (document.getElementById('historyDepth')) {
+                    document.getElementById('historyDepth').value = config.conversation_history_depth || 2;
+                    document.getElementById('maxTokensWisdom').value = config.max_tokens_wisdom || 180;
+                    document.getElementById('maxTokensEmpathy').value = config.max_tokens_empathetic || 220;
+                    document.getElementById('maxTokensCasual').value = config.max_tokens_casual || 80;
+                    document.getElementById('temperature').value = config.temperature || 0.8;
+                    document.getElementById('maxQuotes').value = config.max_quotes_retrieved || 3;
+                }
+                
+                // Load prompt templates editor
+                if (document.getElementById('promptTemplatesEditor')) {
+                    const templatesToShow = {
+                        prompt_templates: config.prompt_templates,
+                        quote_formatting: config.quote_formatting,
+                        response_guidelines: config.response_guidelines,
+                        post_processing: config.post_processing
+                    };
+                    document.getElementById('promptTemplatesEditor').value = 
+                        JSON.stringify(templatesToShow, null, 2);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading behavior settings:', error);
+        }
+    }
+    
+    async savePromptTemplates() {
+        try {
+            const editor = document.getElementById('promptTemplatesEditor');
+            const templates = JSON.parse(editor.value);
+            
+            const response = await fetch(`${this.API_BASE}/api/chat/behavior-settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(templates)
+            });
+            
+            const data = await response.json();
+            this.showToast('Prompt templates saved!', 'success');
+        } catch (error) {
+            this.showToast('Error saving templates: ' + error.message, 'error');
+        }
+    }
+    
+    resetPromptTemplates() {
+        const defaultTemplates = {
+            prompt_templates: {
+                casual: {
+                    role: "friendly, approachable person",
+                    instructions: "Respond naturally. Vary your responses. Keep it short (1-2 sentences). Be warm but not philosophical.",
+                    word_limit: [20, 80]
+                },
+                empathetic: {
+                    role: "caring, wise companion speaking to someone in distress",
+                    structure_instructions: "1. First paragraph: Acknowledge their emotion with gentle understanding (2-3 sentences)\n2. HIT ENTER (line break)\n3. Second paragraph: Then naturally weave in wisdom to offer perspective",
+                    word_limit: [140, 200],
+                    includes_quotes: true
+                },
+                wisdom: {
+                    role: "Rumi",
+                    structure_instructions: "1. First, write a conversational, empathetic response (2-3 sentences)\n2. HIT ENTER (line break)\n3. Then integrate your teachings naturally from above",
+                    word_limit: [100, 180],
+                    includes_quotes: true,
+                    quote_source: "rumi_knowledge_base.json"
+                }
+            },
+            quote_formatting: {
+                show_ids: true,
+                show_sources: true,
+                header: "YOUR TEACHINGS (use these directly):",
+                max_display: 3
+            },
+            response_guidelines: {
+                emphasize_current_question: true,
+                ignore_old_questions: true,
+                natural_integration: true
+            },
+            post_processing: {
+                markers_to_remove: [
+                    "Your response:",
+                    "Begin your response:",
+                    "Response:",
+                    "You are Rumi",
+                    "The seeker asks",
+                    "[Your wisdom]",
+                    "Your wisdom to draw upon"
+                ],
+                skip_patterns: [
+                    "you are",
+                    "rules:",
+                    "seeker's",
+                    "teaching:",
+                    "answer as",
+                    "[your wisdom]",
+                    "[conversation context]",
+                    "conversation so far:"
+                ],
+                max_word_limit: 150,
+                min_word_limit: 30,
+                trim_to_sentence: true
+            }
+        };
+        
+        document.getElementById('promptTemplatesEditor').value = 
+            JSON.stringify(defaultTemplates, null, 2);
+        this.showToast('Templates reset to default', 'info');
     }
 
     saveSettings() {
