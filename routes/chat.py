@@ -568,3 +568,59 @@ async def chat_health():
         "active_conversations": len(conversations),
         "available_models": len([m for m in get_model_registry().get_available_models().values()])
     }
+
+@router.get("/emotion-keywords")
+async def get_emotion_keywords():
+    """Get emotion and keyword tags configuration"""
+    try:
+        import os
+        import json
+        
+        # Load from JSON file
+        config_path = "data/emotion_keywords_config.json"
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            return {
+                    "status": "success",
+                    "config": config
+                }
+        else:
+            # Return default config
+            return {
+                    "status": "success",
+                    "config": {
+                        "emotion_keywords": {},
+                        "theme_keywords": {},
+                        "empathy_triggers": {
+                            "distress_patterns": [],
+                            "emoticons": []
+                        }
+                    }
+                }
+    except Exception as e:
+        logger.error(f"Error loading emotion keywords: {e}")
+        return {
+                "status": "error",
+                "error": str(e)
+            }
+
+@router.post("/emotion-keywords")
+async def save_emotion_keywords(request: Dict[str, Any]):
+    """Save emotion and keyword tags configuration"""
+    try:
+        import os
+        import json
+        
+        config = request
+        config_path = "data/emotion_keywords_config.json"
+        
+        # Save to JSON file
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+        
+        logger.info("Emotion keywords configuration saved")
+        return {"status": "success", "message": "Configuration saved"}
+    except Exception as e:
+        logger.error(f"Error saving emotion keywords: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

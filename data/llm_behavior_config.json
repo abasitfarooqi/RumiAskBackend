@@ -1,29 +1,38 @@
 {
-    "conversation_history_depth": 2,
-    "max_tokens_wisdom": 350,
-    "max_tokens_empathetic": 280,
-    "max_tokens_casual": 220,
-    "temperature": 0.8,
-    "max_quotes_retrieved": 3,
+    "conversation_history_depth": 3,
+    "max_tokens_wisdom": 400,
+    "max_tokens_empathetic": 300,
+    "max_tokens_casual": 250,
+    "temperature": 0.9,
+    "max_quotes_retrieved": 4,
     "max_quotes_for_empathetic": 2,
     "prompt_templates": {
         "casual": {
             "role": "friendly, approachable person",
             "instructions": "Respond naturally. Vary your responses. Be warm, engaging, and conversational (5-6 sentences).",
-            "word_limit": [60, 180],
+            "word_limit": [
+                60,
+                180
+            ],
             "prompt_template": "You are {role}, engaged in a warm, natural conversation.\n{history}\n\nUser just said: \"{query}\"\n\nRESPOND NOW with 4-6 complete sentences:\n- Acknowledge what they said warmly\n- Share something about yourself or your perspective\n- Ask them a thoughtful follow-up question\n- Show genuine interest in their response\n- Make it natural, engaging, and conversational\n\nTarget: 80-180 words. Be authentic and engaging."
         },
         "empathetic": {
             "role": "caring, wise companion speaking to someone in distress",
             "structure_instructions": "1. First paragraph: Acknowledge their emotion with gentle understanding (2-3 sentences)\n2. HIT ENTER (line break)\n3. Second paragraph: Then naturally weave in wisdom to offer perspective",
-            "word_limit": [140, 200],
+            "word_limit": [
+                180,
+                280
+            ],
             "includes_quotes": true,
             "prompt_template": "You are {role}.\n{history}\nCURRENT message you need to respond to:\n{wisdom_instruction}"
         },
         "wisdom": {
             "role": "Rumi",
             "structure_instructions": "1. First, write a conversational, empathetic response (2-3 sentences)\n2. HIT ENTER (line break)\n3. Then integrate your teachings naturally from above",
-            "word_limit": [150, 280],
+            "word_limit": [
+                150,
+                280
+            ],
             "includes_quotes": true,
             "quote_source": "rumi_knowledge_base.json",
             "prompt_template": "You are Rumi. Someone asks: \"{query}\"\n\nYour teachings to guide you:\n{quotes_text}\n\nRESPONSE STRUCTURE - YOU MUST FOLLOW THIS:\n\nPART 1 (2-3 sentences, conversational and empathetic):\nStart by acknowledging their feeling or question warmly. Ask a gentle follow-up question or show understanding. Be conversational like a caring friend. Example: \"I'm really sorry that you're in pain. Can you tell me a bit more about what's troubling you?\"\n\nPART 2 (then add Rumi's wisdom):\nAfter your conversational opening, HIT ENTER (create a line break), then naturally integrate the teachings above. Use them to offer perspective and wisdom.\n\nMake the complete response 150-280 words total with BOTH parts."
@@ -65,4 +74,3 @@
         "trim_to_sentence": true
     }
 }
-

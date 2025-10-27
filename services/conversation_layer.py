@@ -14,16 +14,40 @@ class ConversationLayer:
         """Detect if query needs empathetic support before wisdom"""
         query_lower = query.lower().strip()
         
-        # Emotional distress patterns
+        # Emotional distress patterns - EXPANDED for better detection
         distress_patterns = [
+            # Physical/emotional pain
             "i'm in pain", "i feel pain", "i am in pain", "in pain", "hurts",
             "i'm hurt", "i feel hurt", "hurting", "suffering", "struggling",
+            "feeling sorry", "i'm sorry", "i feel sorry", "feel sorry",
+            
+            # Fear and anxiety
             "i'm scared", "i'm afraid", "afraid", "scared", "worried",
-            "anxious", "overwhelmed", "can't cope", "can't handle"
+            "anxious", "overwhelmed", "can't cope", "can't handle",
+            
+            # Sadness and despair
+            "feeling sad", "i'm sad", "i feel sad", "sad", "depressed", 
+            "down", "low", "feeling low", "hopeless", "lost",
+            
+            # Confusion and uncertainty
+            "don't know", "dont know", "i don't know", "dunno",
+            "don't understand", "confused", "lost", "stuck",
+            
+            # Help-seeking
+            "can't deal with", "can't handle", "too much", "overwhelmed",
+            "help me", "i need help", "what should i do",
+            
+            # Emoticons (check in original query)
+            ":(", ":'(", "😢", "😭", "😰", "😞", "😔", "😓",
         ]
         
-        # Check for emotional distress first
-        return any(pattern in query_lower for pattern in distress_patterns)
+        # Check original query for emoticons (not just lowercase)
+        has_emoticons = any(emoji in query for emoji in [":(", ":'(", "😢", "😭", "😰", "😞", "😔", "😓"])
+        
+        # Check for emotional distress patterns
+        has_distress_pattern = any(pattern in query_lower for pattern in distress_patterns)
+        
+        return has_distress_pattern or has_emoticons
     
     def should_use_rumi_wisdom(self, query: str) -> bool:
         """

@@ -197,6 +197,17 @@ class RumiApp {
         document.getElementById('llm-resetPromptTemplatesBtn').addEventListener('click', () => {
             this.resetLLMPromptTemplates();
         });
+        
+        // Emotion & Keyword Tags
+        document.getElementById('llm-saveTagsBtn').addEventListener('click', () => {
+            this.saveEmotionKeywords();
+        });
+        
+        document.getElementById('llm-resetTagsBtn').addEventListener('click', () => {
+            if (confirm('Reset all emotion and keyword tags to default?')) {
+                this.loadEmotionKeywords();
+            }
+        });
     }
 
     setupKeyboardShortcuts() {
@@ -276,9 +287,10 @@ class RumiApp {
             case 'settings':
                 // Regular settings page
                 break;
-            case 'llm-settings':
-                this.loadLLMBehaviorSettings();
-                break;
+           case 'llm-settings':
+                   this.loadLLMBehaviorSettings();
+                   this.loadEmotionKeywords();
+                   break;
         }
     }
 
@@ -1208,6 +1220,231 @@ class RumiApp {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+    
+    async loadEmotionKeywords() {
+        try {
+            const response = await fetch(`${this.API_BASE}/api/chat/emotion-keywords`);
+            const data = await response.json();
+            
+            if (data.config) {
+                this.currentEmotionConfig = data.config;
+                this.renderTagEditor(data.config);
+            }
+        } catch (error) {
+            console.error('Error loading emotion keywords:', error);
+            this.showToast('Error loading emotion keywords', 'error');
+        }
+    }
+    
+    renderTagEditor(config) {
+        // Render emotion keywords
+        const emotionContainer = document.getElementById('emotionTagsContainer');
+        if (emotionContainer) {
+            emotionContainer.innerHTML = '<h4 style="margin-bottom: 1rem;">Emotion Keywords</h4>';
+            
+            for (const [emotion, keywords] of Object.entries(config.emotion_keywords || {})) {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: var(--card-bg); padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-color);';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong style="text-transform: capitalize;">${emotion}</strong>
+                        <button class="tag-remove-btn" onclick="rumiApp.removeEmotionTag('${emotion}')" style="color: #ff4757; background: none; border: none; cursor: pointer; font-size: 1.2rem;">×</button>
+                    </div>
+                    <div class="tag-list" data-emotion="${emotion}">
+                        ${keywords.map(k => `<span class="tag" data-keyword="${k}" data-emotion="${emotion}">${k} <button onclick="rumiApp.removeKeyword('${k}', '${emotion}')" style="margin-left: 0.5rem; background: rgba(255,71,87,0.2); border: none; border-radius: 4px; padding: 0.15rem 0.5rem; cursor: pointer; color: #ff4757;">×</button></span>`).join('')}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <input type="text" id="new-${emotion}" placeholder="Add keyword..." style="flex: 1; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <button onclick="rumiApp.addKeyword('${emotion}', 'new-${emotion}')" style="padding: 0.5rem 1rem; background: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Add</button>
+                    </div>
+                `;
+                emotionContainer.appendChild(card);
+            }
+            
+            // Add new emotion section
+            const addSection = document.createElement('div');
+            addSection.style.cssText = 'background: var(--card-bg); padding: 1rem; margin-top: 1rem; border-radius: 8px; border: 1px dashed var(--border-color);';
+            addSection.innerHTML = `
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="new-emotion-name" placeholder="New emotion..." style="flex: 1; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <button onclick="rumiApp.addEmotionCategory()" style="padding: 0.5rem 1rem; background: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Add Emotion</button>
+                </div>
+            `;
+            emotionContainer.appendChild(addSection);
+        }
+        
+        // Render theme keywords
+        const themeContainer = document.getElementById('themeTagsContainer');
+        if (themeContainer) {
+            themeContainer.innerHTML = '<h4 style="margin-bottom: 1rem;">Theme Keywords</h4>';
+            
+            for (const [theme, keywords] of Object.entries(config.theme_keywords || {})) {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: var(--card-bg); padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-color);';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong style="text-transform: capitalize;">${theme}</strong>
+                        <button class="tag-remove-btn" onclick="rumiApp.removeThemeTag('${theme}')" style="color: #ff4757; background: none; border: none; cursor: pointer; font-size: 1.2rem;">×</button>
+                    </div>
+                    <div class="tag-list" data-theme="${theme}">
+                        ${keywords.map(k => `<span class="tag" data-keyword="${k}" data-theme="${theme}">${k} <button onclick="rumiApp.removeKeyword('${k}', '${theme}')" style="margin-left: 0.5rem; background: rgba(255,71,87,0.2); border: none; border-radius: 4px; padding: 0.15rem 0.5rem; cursor: pointer; color: #ff4757;">×</button></span>`).join('')}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <input type="text" id="theme-${theme}" placeholder="Add keyword..." style="flex: 1; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <button onclick="rumiApp.addThemeKeyword('${theme}', 'theme-${theme}')" style="padding: 0.5rem 1rem; background: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Add</button>
+                    </div>
+                `;
+                themeContainer.appendChild(card);
+            }
+        }
+        
+        // Render empathy triggers
+        const empathyContainer = document.getElementById('empathyTriggersContainer');
+        if (empathyContainer) {
+            empathyContainer.innerHTML = '<h4 style="margin-bottom: 1rem;">Empathy Triggers</h4>';
+            
+            const patternsDiv = document.createElement('div');
+            patternsDiv.style.cssText = 'background: var(--card-bg); padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-color);';
+            patternsDiv.innerHTML = `
+                <strong style="display: block; margin-bottom: 0.5rem;">Distress Patterns</strong>
+                <textarea id="distress-patterns" style="width: 100%; min-height: 100px; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color);" placeholder="Enter patterns, one per line">${(config.empathy_triggers?.distress_patterns || []).join('\n')}</textarea>
+            `;
+            empathyContainer.appendChild(patternsDiv);
+            
+            const emoticonsDiv = document.createElement('div');
+            emoticonsDiv.style.cssText = 'background: var(--card-bg); padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid var(--border-color);';
+            emoticonsDiv.innerHTML = `
+                <strong style="display: block; margin-bottom: 0.5rem;">Emoticons</strong>
+                <textarea id="emoticons" style="width: 100%; min-height: 80px; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color);" placeholder="Enter emoticons, one per line">${(config.empathy_triggers?.emoticons || []).join('\n')}</textarea>
+            `;
+            empathyContainer.appendChild(emoticonsDiv);
+        }
+    }
+    
+    addKeyword(emotion, inputId) {
+        const input = document.getElementById(inputId);
+        const keyword = input.value.trim();
+        if (!keyword) return;
+        
+        const tagList = document.querySelector(`[data-emotion="${emotion}"]`);
+        if (tagList && !tagList.querySelector(`[data-keyword="${keyword}"]`)) {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.dataset.keyword = keyword;
+            tag.dataset.emotion = emotion;
+            tag.innerHTML = `${keyword} <button onclick="rumiApp.removeKeyword('${keyword}', '${emotion}')" style="margin-left: 0.5rem; background: rgba(255,71,87,0.2); border: none; border-radius: 4px; padding: 0.15rem 0.5rem; cursor: pointer; color: #ff4757;">×</button>`;
+            tagList.appendChild(tag);
+            input.value = '';
+        }
+    }
+    
+    addThemeKeyword(theme, inputId) {
+        const input = document.getElementById(inputId);
+        const keyword = input.value.trim();
+        if (!keyword) return;
+        
+        const tagList = document.querySelector(`[data-theme="${theme}"]`);
+        if (tagList && !tagList.querySelector(`[data-keyword="${keyword}"]`)) {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.dataset.keyword = keyword;
+            tag.dataset.theme = theme;
+            tag.innerHTML = `${keyword} <button onclick="rumiApp.removeKeyword('${keyword}', '${theme}')" style="margin-left: 0.5rem; background: rgba(255,71,87,0.2); border: none; border-radius: 4px; padding: 0.15rem 0.5rem; cursor: pointer; color: #ff4757;">×</button>`;
+            tagList.appendChild(tag);
+            input.value = '';
+        }
+    }
+    
+    removeKeyword(keyword, category) {
+        document.querySelectorAll(`[data-keyword="${keyword}"]`).forEach(el => el.remove());
+    }
+    
+    addEmotionCategory() {
+        const input = document.getElementById('new-emotion-name');
+        const emotionName = input.value.trim().toLowerCase();
+        if (!emotionName) return;
+        
+        this.renderTagEditor({
+            emotion_keywords: {
+                ...this.currentEmotionConfig?.emotion_keywords,
+                [emotionName]: []
+            },
+            theme_keywords: this.currentEmotionConfig?.theme_keywords,
+            empathy_triggers: this.currentEmotionConfig?.empathy_triggers
+        });
+        input.value = '';
+    }
+    
+    removeEmotionTag(emotion) {
+        const tagSection = document.querySelector(`[data-emotion="${emotion}"]`)?.parentElement;
+        if (tagSection) {
+            tagSection.remove();
+        }
+    }
+    
+    removeThemeTag(theme) {
+        const tagSection = document.querySelector(`[data-theme="${theme}"]`)?.parentElement;
+        if (tagSection) {
+            tagSection.remove();
+        }
+    }
+    
+    async saveEmotionKeywords() {
+        try {
+            const config = {
+                emotion_keywords: {},
+                theme_keywords: {},
+                empathy_triggers: {
+                    distress_patterns: [],
+                    emoticons: []
+                }
+            };
+            
+            // Extract emotion keywords
+            document.querySelectorAll('[data-emotion]').forEach(list => {
+                const emotion = list.dataset.emotion;
+                const keywords = Array.from(list.querySelectorAll('.tag')).map(t => t.dataset.keyword);
+                config.emotion_keywords[emotion] = keywords;
+            });
+            
+            // Extract theme keywords
+            document.querySelectorAll('[data-theme]').forEach(list => {
+                const theme = list.dataset.theme;
+                const keywords = Array.from(list.querySelectorAll('.tag')).map(t => t.dataset.keyword);
+                config.theme_keywords[theme] = keywords;
+            });
+            
+            // Extract empathy triggers
+            const distressEl = document.getElementById('distress-patterns');
+            const emoticonsEl = document.getElementById('emoticons');
+            
+            if (distressEl) {
+                const distressText = distressEl.value;
+                config.empathy_triggers.distress_patterns = distressText.split('\n').map(l => l.trim()).filter(l => l);
+            }
+            
+            if (emoticonsEl) {
+                const emoticonsText = emoticonsEl.value;
+                config.empathy_triggers.emoticons = emoticonsText.split('\n').map(l => l.trim()).filter(l => l);
+            }
+            
+            const response = await fetch(`${this.API_BASE}/api/chat/emotion-keywords`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            
+            if (response.ok) {
+                this.showToast('Emotion keywords saved!', 'success');
+                await this.loadEmotionKeywords();
+            } else {
+                this.showToast('Error saving emotion keywords', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving emotion keywords:', error);
+            this.showToast('Error saving emotion keywords', 'error');
+        }
     }
 }
 

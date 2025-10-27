@@ -1,0 +1,23 @@
+{
+    "emotion_keywords": {
+        "test_emotion": [
+            "test1",
+            "test2",
+            "test3"
+        ]
+    },
+    "theme_keywords": {
+        "test_theme": [
+            "theme1",
+            "theme2"
+        ]
+    },
+    "empathy_triggers": {
+        "distress_patterns": [
+            "test pattern"
+        ],
+        "emoticons": [
+            "test"
+        ]
+    }
+}

@@ -657,6 +657,30 @@
         .toast.info {
             border-left: 4px solid #17a2b8;
         }
+        
+        /* Tag Styles */
+        .tag {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            margin: 0.25rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tag-remove-btn:hover {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -866,6 +890,18 @@
                             <input type="number" id="llm-maxQuotes" min="1" max="5" value="3" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
                         </div>
                         <button class="btn btn-primary" id="llm-saveBehaviorBtn" style="margin-top: 1rem;">💾 Save LLM Behavior Settings</button>
+                    </div>
+                    
+                    <div class="settings-section" style="margin-top: 2rem;">
+                        <h3>🏷️ Emotion & Keyword Tags</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                            Configure emotion keywords, theme keywords, and empathy triggers. These control how Rumi responds to different emotions and topics.
+                        </p>
+                        <div id="emotionTagsContainer" style="margin-bottom: 2rem;"></div>
+                        <div id="themeTagsContainer" style="margin-bottom: 2rem;"></div>
+                        <div id="empathyTriggersContainer" style="margin-bottom: 2rem;"></div>
+                        <button class="btn btn-primary" id="llm-saveTagsBtn" style="margin-top: 1rem;">💾 Save Emotion & Keyword Tags</button>
+                        <button class="btn btn-secondary" id="llm-resetTagsBtn" style="margin-top: 0.5rem;">🔄 Reset to Default</button>
                     </div>
                     
                     <div class="settings-section" style="margin-top: 2rem;">

@@ -54,7 +54,14 @@ Respond as Rumi would, weaving these themes into your answer. Be authentic, poet
 
 User just said: "{query}"
 
-RESPOND NOW with 4-6 complete sentences. Be authentic and engaging."""
+RESPOND NOW with 5-7 complete sentences:
+- Acknowledge what they said warmly
+- Share something about yourself or your perspective
+- Ask them a thoughtful follow-up question or two
+- Show genuine interest in their response
+- Be authentic, engaging, and conversational
+
+Target: 80-180 words. Be natural and varied in your responses."""
     
     def generate_empathetic_prompt(self, query: str, quotes: List[Dict[str, Any]] = None, conversation_history: List[str] = None) -> str:
         """Generate empathetic support prompt for emotional distress"""
@@ -75,20 +82,36 @@ RESPOND NOW with 4-6 complete sentences. Be authentic and engaging."""
             quotes_text = self._format_quotes(quotes[:2])
             wisdom_instruction = f"""They said: "{query}"
 
-Respond with genuine empathy:
-1. First acknowledge their emotion warmly (2-3 sentences)
-2. Then naturally weave in this wisdom to offer perspective:
+Respond as a caring, wise companion to someone in distress:
+
+PART 1 - Acknowledge their pain (2-3 warm sentences):
+First, genuinely acknowledge what they're feeling. Validate their emotion. Show you understand their struggle.
+
+PART 2 - Offer wisdom naturally (after a line break):
+Then, naturally weave in this wisdom to offer gentle perspective:
 {quotes_text}
 
-Make it complete and rich (180-280 words total)."""
+Guidelines:
+- Be warm, genuine, and authentic
+- Don't be preachy or dismissive
+- Make them feel heard and understood
+- Total length: 180-280 words"""
         else:
             wisdom_instruction = f"""They said: "{query}"
 
-1. Acknowledge their emotion with gentle understanding (2-3 sentences)
-2. Validate their experience
-3. Offer thoughtful perspective
+Respond as a caring, wise companion to someone in distress:
 
-Respond with genuine empathy and understanding. (100-180 words)"""
+Acknowledge their emotion warmly (2-3 sentences):
+Start by genuinely acknowledging what they're feeling. Validate their experience. Show you understand their struggle.
+
+Offer thoughtful perspective:
+Then offer gentle wisdom and perspective that might help them see their situation differently.
+
+Guidelines:
+- Be warm, genuine, and understanding
+- Validate their feelings first
+- Offer perspective without being preachy
+- Total length: 150-220 words"""
         
         # Use template from JSON config
         prompt_template = template.get('prompt_template', '')
