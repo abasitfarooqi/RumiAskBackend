@@ -400,12 +400,35 @@ async def ask_rumi(request: ChatRequest):
         # Post-process response
         final_response = responder.post_process_response(response.response)
         
-        # Collect technical specs
+        # Collect technical specs for monitoring
         response_type = "❤️ Empathetic Support" if needs_empathy else "🔮 Rumi Wisdom" if use_rumi_wisdom else "💬 Casual Chat"
         quotes_used = len(quotes) if quotes else 0
+        tokens_used = getattr(response, 'tokens_used', 0) or 0
+        prompt_length = len(enhanced_prompt)
+        inference_time = response.inference_time if hasattr(response, 'inference_time') else 0
         
-        # Add technical specs temporarily (user will remove later)
-        tech_specs = f"\n\n--- TECH SPECS ---\nMode: {response_type}\nQuotes used: {quotes_used}\nTime: {response.inference_time:.2f}s"
+        # Estimate tokens from response if not provided
+        if tokens_used == 0:
+            tokens_used = len(final_response.split())  # Rough estimate: word count
+        
+        # Calculate estimated GPU usage (rough estimate based on tokens)
+        # Typical: ~500 MB for small models like gemma3:270m
+        estimated_gpu_mb = max(100, tokens_used * 2)  # Rough estimate: 2 MB per token
+        estimated_cost_usd = (tokens_used / 1000) * 0.0001  # Rough estimate: $0.0001 per 1k tokens
+        
+        # Add comprehensive technical specs
+        tech_specs = f"""
+--- TECH SPECS ---
+Mode: {response_type}
+Model: {request.model}
+Quotes used: {quotes_used}
+Inference time: {inference_time:.2f}s
+Tokens generated: {tokens_used}
+Prompt length: {prompt_length} chars
+Max tokens: {max_tokens}
+Temperature: {temperature}
+Estimated GPU usage: {estimated_gpu_mb} MB
+Estimated cost: ${estimated_cost_usd:.6f}"""
         final_response += tech_specs
         
         # If using Rumi wisdom OR empathetic support with quotes, append sources
