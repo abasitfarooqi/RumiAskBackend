@@ -1,0 +1,161 @@
+{
+  "quotes": [
+    {
+      "id": "rumi_001",
+      "text": "The wound is the place where the Light enters you.",
+      "category": "healing",
+      "theme": "transformation",
+      "context": "About finding meaning in suffering and pain",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["healing", "light", "suffering", "transformation"]
+    },
+    {
+      "id": "rumi_002", 
+      "text": "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself.",
+      "category": "wisdom",
+      "theme": "self-improvement",
+      "context": "About personal growth and inner transformation",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["wisdom", "change", "self-improvement", "growth"]
+    },
+    {
+      "id": "rumi_003",
+      "text": "The minute I heard my first love story, I started looking for you, not knowing how blind that was. Lovers don't finally meet somewhere. They're in each other all along.",
+      "category": "love",
+      "theme": "divine-love",
+      "context": "About the nature of true love and connection",
+      "translation": "English", 
+      "source": "The Essential Rumi",
+      "tags": ["love", "connection", "divine", "unity"]
+    },
+    {
+      "id": "rumi_004",
+      "text": "Let yourself be silently drawn by the strange pull of what you really love. It will not lead you astray.",
+      "category": "guidance",
+      "theme": "intuition",
+      "context": "About following one's heart and inner calling",
+      "translation": "English",
+      "source": "The Essential Rumi", 
+      "tags": ["guidance", "intuition", "love", "trust"]
+    },
+    {
+      "id": "rumi_005",
+      "text": "The soul has been given its own ears to hear things the mind does not understand.",
+      "category": "spirituality",
+      "theme": "soul",
+      "context": "About the difference between intellectual and spiritual understanding",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["soul", "spirituality", "understanding", "wisdom"]
+    },
+    {
+      "id": "rumi_006",
+      "text": "Be like a tree and let the dead leaves drop.",
+      "category": "letting-go",
+      "theme": "release",
+      "context": "About releasing what no longer serves us",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["letting-go", "release", "nature", "growth"]
+    },
+    {
+      "id": "rumi_007",
+      "text": "The garden of the world has no limits, except in your mind.",
+      "category": "perspective",
+      "theme": "limitations",
+      "context": "About mental limitations and expanding consciousness",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["perspective", "limitations", "mind", "expansion"]
+    },
+    {
+      "id": "rumi_008",
+      "text": "When you do things from your soul, you feel a river moving in you, a joy.",
+      "category": "joy",
+      "theme": "authenticity",
+      "context": "About living authentically and finding inner joy",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["joy", "authenticity", "soul", "flow"]
+    },
+    {
+      "id": "rumi_009",
+      "text": "The universe is not outside of you. Look inside yourself; everything that you want, you already are.",
+      "category": "self-realization",
+      "theme": "inner-power",
+      "context": "About finding everything within oneself",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["self-realization", "inner-power", "universe", "completeness"]
+    },
+    {
+      "id": "rumi_010",
+      "text": "Don't be satisfied with stories, how things have gone with others. Unfold your own myth.",
+      "category": "individuality",
+      "theme": "uniqueness",
+      "context": "About creating one's own path and story",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["individuality", "uniqueness", "myth", "path"]
+    },
+    {
+      "id": "rumi_011",
+      "text": "The art of knowing is knowing what to ignore.",
+      "category": "wisdom",
+      "theme": "discernment",
+      "context": "About the importance of selective attention and focus",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["wisdom", "discernment", "focus", "knowledge"]
+    },
+    {
+      "id": "rumi_012",
+      "text": "Be grateful for your life, every detail of it, and your face will come to shine like a sun, and everyone who sees it will be made glad and peaceful.",
+      "category": "gratitude",
+      "theme": "radiance",
+      "context": "About the transformative power of gratitude",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["gratitude", "radiance", "peace", "transformation"]
+    },
+    {
+      "id": "rumi_013",
+      "text": "The moment you accept what troubles you've been given, the door will open.",
+      "category": "acceptance",
+      "theme": "surrender",
+      "context": "About accepting challenges as opportunities for growth",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["acceptance", "surrender", "troubles", "growth"]
+    },
+    {
+      "id": "rumi_014",
+      "text": "There is a voice that doesn't use words. Listen.",
+      "category": "intuition",
+      "theme": "silence",
+      "context": "About listening to inner wisdom beyond words",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["intuition", "silence", "voice", "listening"]
+    },
+    {
+      "id": "rumi_015",
+      "text": "You are not a drop in the ocean. You are the entire ocean in a drop.",
+      "category": "unity",
+      "theme": "wholeness",
+      "context": "About the microcosm containing the macrocosm",
+      "translation": "English",
+      "source": "The Essential Rumi",
+      "tags": ["unity", "wholeness", "ocean", "drop"]
+    }
+  ],
+  "metadata": {
+    "total_quotes": 15,
+    "categories": ["healing", "wisdom", "love", "guidance", "spirituality", "letting-go", "perspective", "joy", "self-realization", "individuality", "gratitude", "acceptance", "intuition", "unity"],
+    "themes": ["transformation", "self-improvement", "divine-love", "intuition", "soul", "release", "limitations", "authenticity", "inner-power", "uniqueness", "discernment", "radiance", "surrender", "silence", "wholeness"],
+    "last_updated": "2024-01-01T00:00:00Z",
+    "version": "1.0.0"
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "total_quotes": 360,
+    "pillars": [
+      "I. The Heart's Desire (Love & Union)",
+      "II. The Journey Within (Self-Realization)"
+    ],
+    "themes": [
+      "Divine Love",
+      "Human Love",
+      "Friendship",
+      "Unity",
+      "Self-Discovery",
+      "Purpose & Destiny",
+      "Wisdom",
+      "Creativity",
+      "Spirituality"
+    ],
+    "last_updated": "2024-01-01T00:00:00Z"
+  },
+  "quotes": [
+    {
+      "id": "DLV001",
+      "core_pillar": "I. The Heart's Desire (Love & Union)",
+      "primary_theme": "Divine Love",
+      "quote": "The moment you give up the search, you are found. The map was written on the sole of your foot all along.",
+      "micro_tags": ["Ecstasy", "Worship", "Presence", "Inwardness"],
+      "emotion_tags": ["realization", "surrender", "recognition", "awakening"],
+      "source_ref": "Masnavi I: 3052-3067",
+      "quote_type": "Short-Quote",
+      "query_intent": [
+        "Where can I find myself?",
+        "I've been searching for meaning everywhere",
+        "I feel lost on my spiritual journey",
+        "How do I stop searching and start being?",
+        "Where is the map to my soul?"
+      ],
+      "user_questions": [
+        "Where can I find myself?",
+        "I feel lost in my search",
+        "How do I stop searching and start being?",
+        "What does Rumi say about the spiritual search?",
+        "I'm looking for answers everywhere but can't find them"
+      ]
+    },
+    {
+      "id": "DLV002",
+      "core_pillar": "I. The Heart's Desire (Love & Union)",
+      "primary_theme": "Divine Love",
+      "quote": "Do not seek to be safe. Seek only to be a moth who has surrendered to the fire and cannot live without the flame.",
+      "micro_tags": ["Sacrifice", "Burning", "Devotion", "Risk"],
+      "emotion_tags": ["commitment", "surrender", "passion", "vulnerability", "devotion"],
+      "source_ref": "Masnavi V: 4200-4215 (The moth and the candle)",
+      "quote_type": "Short-Quote",
+      "query_intent": [
+        "How do I fully commit to my path?",
+        "I'm afraid of taking risks in love",
+        "What does it mean to truly surrender?",
+        "Should I play it safe or take the risk?",
+        "How do I let go of fear and dive in?"
+      ],
+      "user_questions": [
+        "Should I take risks in love?",
+        "How do I overcome fear of commitment?",
+        "What does complete surrender look like?",
+        "I'm too cautious, how do I let go?",
+        "What does Rumi say about being safe vs. being alive?"
+      ]
+    },
+    {
+      "id": "DLV003",
+      "core_pillar": "I. The Heart's Desire (Love & Union)",
+      "primary_theme": "Divine Love",
+      "quote": "Your longing is the prayer. The ache of separation proves the unity, for only a soul that remembers its home can weep.",
+      "micro_tags": ["Longing", "Separation", "Wholeness", "Tears"],
+      "emotion_tags": ["longing", "sadness", "memories", "connection", "wholeness"],
+      "source_ref": "Masnavi I: 1-10 (The Reed Flute's lament)",
+      "quote_type": "Short-Quote",
+      "query_intent": [
+        "Why do I feel this emptiness inside?",
+        "I miss someone deeply",
+        "What does my longing mean?",
+        "I feel incomplete, like part of me is missing",
+        "Why do I yearn for something I can't name?"
+      ],
+      "user_questions": [
+        "Why do I feel this deep longing?",
+        "What does my sadness tell me?",
+        "Why do I feel incomplete?",
+        "What does separation teach us?",
+        "I feel an ache in my heart, what does it mean?"
+      ]
+    },
+    {
+      "id": "SDI001",
+      "core_pillar": "II. The Journey Within (Self-Realization)",
+      "primary_theme": "Self-Discovery",
+      "quote": "Your task is not to seek the Path, but to find the thousands of walls you have built against it inside your own heart. Tear them down.",
+      "micro_tags": ["InnerTruth", "EgoVeil", "Authenticity", "Search"],
+      "emotion_tags": ["conflict", "resistance", "self-awareness", "liberation", "obstacle"],
+      "source_ref": "Masnavi II: 1690-1701 (Finding the Path within)",
+      "quote_type": "Short-Quote",
+      "query_intent": [
+        "Why can't I find my path?",
+        "I feel blocked from my truth",
+        "What's stopping me from being myself?",
+        "How do I tear down my walls?",
+        "I've built barriers, how do I break them?"
+      ],
+      "user_questions": [
+        "Why can't I find my true path?",
+        "What walls have I built inside myself?",
+        "How do I remove my inner barriers?",
+        "What's blocking me from authenticity?",
+        "Why am I my own worst enemy?"
+      ]
+    },
+    {
+      "id": "WSD001",
+      "core_pillar": "II. The Journey Within (Self-Realization)",
+      "primary_theme": "Wisdom",
+      "quote": "The true wisdom is not the counting of facts but the courage to sit in the place of unknowing. The intellect measures, but the heart understands.",
+      "micro_tags": ["Unknowing", "Intellect", "Courage", "Understanding"],
+      "emotion_tags": ["humility", "uncertainty", "acceptance", "insight", "understanding"],
+      "source_ref": "Masnavi I: 1785-1790 (Reason vs. Heart)",
+      "quote_type": "Short-Quote",
+      "query_intent": [
+        "How do I become wiser?",
+        "What's the difference between knowledge and wisdom?",
+        "I don't know everything, is that okay?",
+        "How do I accept not knowing?",
+        "Should I trust my heart or my mind?"
+      ],
+      "user_questions": [
+        "What's the difference between wisdom and knowledge?",
+        "How do I learn to accept uncertainty?",
+        "Should I trust my heart or my head?",
+        "What does it mean to sit in unknowing?",
+        "How do I become truly wise?"
+      ]
+    }
+  ]
+}
+

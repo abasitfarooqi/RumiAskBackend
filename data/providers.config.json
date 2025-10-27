@@ -1,0 +1,33 @@
+{
+  "providers": {
+    "ollama": {
+      "name": "ollama",
+      "enabled": true,
+      "api_key": null,
+      "base_url": "http://localhost:11434",
+      "max_requests_per_minute": null,
+      "timeout": 300,
+      "fallback_enabled": true
+    },
+    "huggingface": {
+      "name": "huggingface",
+      "enabled": true,
+      "api_key": null,
+      "base_url": "https://api-inference.huggingface.co",
+      "max_requests_per_minute": null,
+      "timeout": 60,
+      "fallback_enabled": true
+    },
+    "openai": {
+      "name": "openai",
+      "enabled": false,
+      "api_key": null,
+      "base_url": "https://api.openai.com/v1",
+      "max_requests_per_minute": 60,
+      "timeout": 30,
+      "fallback_enabled": true
+    }
+  },
+  "last_updated": "2024-01-01T00:00:00Z",
+  "version": "1.0.0"
+}
