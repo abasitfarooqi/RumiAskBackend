@@ -674,6 +674,7 @@
                     <button class="nav-tab" data-page="system">📊 System</button>
                     <button class="nav-tab" data-page="history">📚 History</button>
                     <button class="nav-tab" data-page="settings">⚙️ Settings</button>
+                    <button class="nav-tab" data-page="llm-settings">🧠 LLM Settings</button>
                 </nav>
                 
                 <div class="header-actions">
@@ -813,70 +814,77 @@
                         </select>
                     </div>
                 </div>
-                
-                <div class="settings-section">
-                    <h3>🧠 LLM Behavior Settings</h3>
-                    <div class="setting-item">
-                        <div>
-                            <div class="setting-label">Conversation History Depth</div>
-                            <div class="setting-description">How many previous messages to remember (1-5)</div>
-                        </div>
-                        <input type="number" id="historyDepth" min="1" max="5" value="2" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
-                    </div>
-                    <div class="setting-item">
-                        <div>
-                            <div class="setting-label">Max Tokens (Wisdom Mode)</div>
-                            <div class="setting-description">Token limit for Rumi wisdom responses (100-500)</div>
-                        </div>
-                        <input type="number" id="maxTokensWisdom" min="100" max="500" value="300" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
-                    </div>
-                    <div class="setting-item">
-                        <div>
-                            <div class="setting-label">Max Tokens (Empathetic Mode)</div>
-                            <div class="setting-description">Token limit for empathetic responses (100-500)</div>
-                        </div>
-                        <input type="number" id="maxTokensEmpathy" min="100" max="500" value="280" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
-                    </div>
-                    <div class="setting-item">
-                        <div>
-                            <div class="setting-label">Max Tokens (Casual Mode)</div>
-                            <div class="setting-description">Token limit for casual chat (50-350)</div>
-                        </div>
-                        <input type="number" id="maxTokensCasual" min="50" max="350" value="220" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
-                    </div>
-                    <div class="setting-item">
-                        <div>
-                            <div class="setting-label">Temperature</div>
-                            <div class="setting-description">Response creativity (0.0-1.0)</div>
-                        </div>
-                        <input type="number" id="temperature" min="0" max="1" step="0.1" value="0.8" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
-                    </div>
-                    <div class="setting-item">
-                        <div>
-                            <div class="setting-label">Max Quotes Retrieved</div>
-                            <div class="setting-description">Number of quotes to use (1-5)</div>
-                        </div>
-                        <input type="number" id="maxQuotes" min="1" max="5" value="3" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
-                    </div>
-                    <button class="btn btn-primary" id="saveBehaviorBtn" style="margin-top: 1rem;">💾 Save LLM Behavior Settings</button>
-                </div>
-                
-                <div class="settings-section" style="margin-top: 2rem;">
-                    <h3>📝 Prompt Templates (JSON Editor)</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-                        Edit prompt templates for different conversation types. Changes apply immediately.
-                    </p>
-                    <div style="position: relative; width: 100%;">
-                        <textarea id="promptTemplatesEditor" 
-                            style="width: 100%; min-height: 400px; padding: 1rem; 
-                                   font-family: 'Courier New', monospace; font-size: 0.9rem;
-                                   border-radius: 8px; border: 1px solid var(--border-color);
-                                   background: var(--card-bg); color: var(--text-color);"></textarea>
-                    </div>
-                    <button class="btn btn-primary" id="savePromptTemplatesBtn" style="margin-top: 1rem;">💾 Save Prompt Templates</button>
-                    <button class="btn btn-secondary" id="resetPromptTemplatesBtn" style="margin-top: 0.5rem;">🔄 Reset to Default</button>
-                </div>
                 </div> <!-- End scrollable container -->
+            </div>
+            
+            <!-- LLM Settings Page -->
+            <div class="page" id="llm-settings-page">
+                <h2 style="margin-bottom: 1.5rem;">🧠 LLM Behavior Settings</h2>
+                
+                <div style="max-height: calc(100vh - 150px); overflow-y: auto; padding-right: 1rem;">
+                    <div class="settings-section">
+                        <h3>⚙️ Basic Behavior Settings</h3>
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Conversation History Depth</div>
+                                <div class="setting-description">How many previous messages to remember (1-5)</div>
+                            </div>
+                            <input type="number" id="llm-historyDepth" min="1" max="5" value="2" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
+                        </div>
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Max Tokens (Wisdom Mode)</div>
+                                <div class="setting-description">Token limit for Rumi wisdom responses (100-500)</div>
+                            </div>
+                            <input type="number" id="llm-maxTokensWisdom" min="100" max="500" value="300" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
+                        </div>
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Max Tokens (Empathetic Mode)</div>
+                                <div class="setting-description">Token limit for empathetic responses (100-500)</div>
+                            </div>
+                            <input type="number" id="llm-maxTokensEmpathy" min="100" max="500" value="280" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
+                        </div>
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Max Tokens (Casual Mode)</div>
+                                <div class="setting-description">Token limit for casual chat (50-350)</div>
+                            </div>
+                            <input type="number" id="llm-maxTokensCasual" min="50" max="350" value="220" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
+                        </div>
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Temperature</div>
+                                <div class="setting-description">Response creativity (0.0-1.0)</div>
+                            </div>
+                            <input type="number" id="llm-temperature" min="0" max="1" step="0.1" value="0.8" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
+                        </div>
+                        <div class="setting-item">
+                            <div>
+                                <div class="setting-label">Max Quotes Retrieved</div>
+                                <div class="setting-description">Number of quotes to use (1-5)</div>
+                            </div>
+                            <input type="number" id="llm-maxQuotes" min="1" max="5" value="3" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); width: 80px;">
+                        </div>
+                        <button class="btn btn-primary" id="llm-saveBehaviorBtn" style="margin-top: 1rem;">💾 Save LLM Behavior Settings</button>
+                    </div>
+                    
+                    <div class="settings-section" style="margin-top: 2rem;">
+                        <h3>📝 Prompt Templates (JSON Editor)</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                            Edit prompt templates for different conversation types. Changes apply immediately.
+                        </p>
+                        <div style="position: relative; width: 100%;">
+                            <textarea id="llm-promptTemplatesEditor" 
+                                style="width: 100%; min-height: 400px; padding: 1rem; 
+                                       font-family: 'Courier New', monospace; font-size: 0.9rem;
+                                       border-radius: 8px; border: 1px solid var(--border-color);
+                                       background: var(--card-bg); color: var(--text-color);"></textarea>
+                        </div>
+                        <button class="btn btn-primary" id="llm-savePromptTemplatesBtn" style="margin-top: 1rem;">💾 Save Prompt Templates</button>
+                        <button class="btn btn-secondary" id="llm-resetPromptTemplatesBtn" style="margin-top: 0.5rem;">🔄 Reset to Default</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

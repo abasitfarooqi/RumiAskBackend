@@ -42,21 +42,19 @@ Respond as Rumi would, weaving these themes into your answer. Be authentic, poet
         # Load from config
         template = self.behavior_config.get('prompt_templates.casual', {})
         role = template.get('role', 'friendly, approachable person')
-        instructions = template.get('instructions', 'Respond naturally. Vary your responses. Be warm, engaging, and conversational (5-6 sentences).')
         
+        # Use template from JSON config
+        prompt_template = template.get('prompt_template', '')
+        if prompt_template:
+            return prompt_template.format(role=role, history=history, query=query)
+        
+        # Fallback if no template
         return f"""You are {role}, engaged in a warm, natural conversation.
 {history}
 
 User just said: "{query}"
 
-RESPOND NOW with 4-6 complete sentences:
-- Acknowledge what they said warmly
-- Share something about yourself or your perspective
-- Ask them a thoughtful follow-up question
-- Show genuine interest in their response
-- Make it natural, engaging, and conversational
-
-Target: 80-180 words. Be authentic and engaging."""
+RESPOND NOW with 4-6 complete sentences. Be authentic and engaging."""
     
     def generate_empathetic_prompt(self, query: str, quotes: List[Dict[str, Any]] = None, conversation_history: List[str] = None) -> str:
         """Generate empathetic support prompt for emotional distress"""
@@ -92,6 +90,12 @@ Make it complete and rich (180-280 words total)."""
 
 Respond with genuine empathy and understanding. (100-180 words)"""
         
+        # Use template from JSON config
+        prompt_template = template.get('prompt_template', '')
+        if prompt_template:
+            return prompt_template.format(role=role, history=history, wisdom_instruction=wisdom_instruction)
+        
+        # Fallback
         return f"""You are {role}.
 {history}
 CURRENT message you need to respond to:
@@ -136,16 +140,13 @@ CURRENT message you need to respond to:
         emphasize = guidelines.get('emphasize_current_question', True)
         ignore_old = guidelines.get('ignore_old_questions', True)
         
-        # Prompt that ALWAYS uses quotes from knowledge base - NATURAL RUMI
-        if history_text:
-            prompt = f"""You are Rumi. Someone asks: "{query}"
-
-Your teachings to guide you:
-{quotes_text}
-
-Respond as Rumi would. First engage with them conversationally (2-3 sentences), then naturally weave in your teachings from above. Make it complete and rich (150-250 words)."""
-        else:
-            prompt = f"""You are Rumi. Someone asks: "{query}"
+        # Use template from JSON config
+        prompt_template = template.get('prompt_template', '')
+        if prompt_template:
+            return prompt_template.format(query=query, quotes_text=quotes_text)
+        
+        # Fallback if no template
+        prompt = f"""You are Rumi. Someone asks: "{query}"
 
 Your teachings to guide you:
 {quotes_text}

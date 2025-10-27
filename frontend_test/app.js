@@ -179,6 +179,19 @@ class RumiApp {
         document.getElementById('resetPromptTemplatesBtn').addEventListener('click', () => {
             this.resetPromptTemplates();
         });
+        
+        // LLM Settings Page
+        document.getElementById('llm-saveBehaviorBtn').addEventListener('click', () => {
+            this.saveLLMBehaviorSettings();
+        });
+        
+        document.getElementById('llm-savePromptTemplatesBtn').addEventListener('click', () => {
+            this.saveLLMPromptTemplates();
+        });
+        
+        document.getElementById('llm-resetPromptTemplatesBtn').addEventListener('click', () => {
+            this.resetLLMPromptTemplates();
+        });
     }
 
     setupKeyboardShortcuts() {
@@ -247,7 +260,10 @@ class RumiApp {
                 this.loadConversations();
                 break;
             case 'settings':
-                this.loadBehaviorSettings();
+                // Regular settings page
+                break;
+            case 'llm-settings':
+                this.loadLLMBehaviorSettings();
                 break;
         }
     }
@@ -958,6 +974,149 @@ class RumiApp {
 
     toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
+    }
+
+    async loadLLMBehaviorSettings() {
+        try {
+            const response = await fetch(`${this.API_BASE}/api/chat/behavior-settings`);
+            const data = await response.json();
+            
+            if (data.config) {
+                const config = data.config;
+                // Load into LLM settings page fields
+                if (document.getElementById('llm-historyDepth')) {
+                    document.getElementById('llm-historyDepth').value = config.conversation_history_depth || 2;
+                    document.getElementById('llm-maxTokensWisdom').value = config.max_tokens_wisdom || 300;
+                    document.getElementById('llm-maxTokensEmpathy').value = config.max_tokens_empathetic || 280;
+                    document.getElementById('llm-maxTokensCasual').value = config.max_tokens_casual || 220;
+                    document.getElementById('llm-temperature').value = config.temperature || 0.8;
+                    document.getElementById('llm-maxQuotes').value = config.max_quotes_retrieved || 3;
+                }
+                
+                // Load prompt templates editor
+                if (document.getElementById('llm-promptTemplatesEditor')) {
+                    const templatesToShow = {
+                        prompt_templates: config.prompt_templates,
+                        quote_formatting: config.quote_formatting,
+                        response_guidelines: config.response_guidelines,
+                        post_processing: config.post_processing
+                    };
+                    document.getElementById('llm-promptTemplatesEditor').value = 
+                        JSON.stringify(templatesToShow, null, 2);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading LLM behavior settings:', error);
+        }
+    }
+    
+    async saveLLMBehaviorSettings() {
+        try {
+            const settings = {
+                conversation_history_depth: parseInt(document.getElementById('llm-historyDepth').value),
+                max_tokens_wisdom: parseInt(document.getElementById('llm-maxTokensWisdom').value),
+                max_tokens_empathetic: parseInt(document.getElementById('llm-maxTokensEmpathy').value),
+                max_tokens_casual: parseInt(document.getElementById('llm-maxTokensCasual').value),
+                temperature: parseFloat(document.getElementById('llm-temperature').value),
+                max_quotes_retrieved: parseInt(document.getElementById('llm-maxQuotes').value)
+            };
+            
+            const response = await fetch(`${this.API_BASE}/api/chat/behavior-settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            
+            const data = await response.json();
+            this.showToast('LLM behavior settings saved!', 'success');
+        } catch (error) {
+            this.showToast('Error saving settings: ' + error.message, 'error');
+        }
+    }
+    
+    async saveLLMPromptTemplates() {
+        try {
+            const editor = document.getElementById('llm-promptTemplatesEditor');
+            const templates = JSON.parse(editor.value);
+            
+            const response = await fetch(`${this.API_BASE}/api/chat/behavior-settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(templates)
+            });
+            
+            const data = await response.json();
+            this.showToast('Prompt templates saved!', 'success');
+        } catch (error) {
+            this.showToast('Error saving templates: ' + error.message, 'error');
+        }
+    }
+    
+    resetLLMPromptTemplates() {
+        const defaultTemplates = {
+            prompt_templates: {
+                casual: {
+                    role: "friendly, approachable person",
+                    instructions: "Respond naturally. Vary your responses. Be warm, engaging, and conversational (5-6 sentences).",
+                    word_limit: [60, 180],
+                    prompt_template: "You are {role}, engaged in a warm, natural conversation.\n{history}\n\nUser just said: \"{query}\"\n\nRESPOND NOW with 4-6 complete sentences:\n- Acknowledge what they said warmly\n- Share something about yourself or your perspective\n- Ask them a thoughtful follow-up question\n- Show genuine interest in their response\n- Make it natural, engaging, and conversational\n\nTarget: 80-180 words. Be authentic and engaging."
+                },
+                empathetic: {
+                    role: "caring, wise companion speaking to someone in distress",
+                    structure_instructions: "1. First paragraph: Acknowledge their emotion with gentle understanding (2-3 sentences)\n2. HIT ENTER (line break)\n3. Second paragraph: Then naturally weave in wisdom to offer perspective",
+                    word_limit: [140, 200],
+                    includes_quotes: true,
+                    prompt_template: "You are {role}.\n{history}\nCURRENT message you need to respond to:\n{wisdom_instruction}"
+                },
+                wisdom: {
+                    role: "Rumi",
+                    structure_instructions: "1. First, write a conversational, empathetic response (2-3 sentences)\n2. HIT ENTER (line break)\n3. Then integrate your teachings naturally from above",
+                    word_limit: [150, 280],
+                    includes_quotes: true,
+                    quote_source: "rumi_knowledge_base.json",
+                    prompt_template: "You are Rumi. Someone asks: \"{query}\"\n\nYour teachings to guide you:\n{quotes_text}\n\nRespond as Rumi would. First engage with them conversationally (2-3 sentences), then naturally weave in your teachings from above. Make it complete and rich (150-250 words)."
+                }
+            },
+            quote_formatting: {
+                show_ids: true,
+                show_sources: true,
+                header: "YOUR TEACHINGS (use these directly):",
+                max_display: 3
+            },
+            response_guidelines: {
+                emphasize_current_question: true,
+                ignore_old_questions: true,
+                natural_integration: true
+            },
+            post_processing: {
+                markers_to_remove: [
+                    "Your response:",
+                    "Begin your response:",
+                    "Response:",
+                    "You are Rumi",
+                    "The seeker asks",
+                    "[Your wisdom]",
+                    "Your wisdom to draw upon"
+                ],
+                skip_patterns: [
+                    "you are",
+                    "rules:",
+                    "seeker's",
+                    "teaching:",
+                    "answer as",
+                    "[your wisdom]",
+                    "[conversation context]",
+                    "conversation so far:"
+                ],
+                max_word_limit: 150,
+                min_word_limit: 30,
+                trim_to_sentence: true
+            }
+        };
+        
+        document.getElementById('llm-promptTemplatesEditor').value = 
+            JSON.stringify(defaultTemplates, null, 2);
+        this.showToast('Templates reset to default', 'info');
     }
 
     showToast(message, type = 'info') {
